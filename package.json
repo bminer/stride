@@ -1,0 +1,30 @@
+{
+	"name": "stride",
+	"version": "0.1.0",
+	"description": "A step-like flow control library for Node.js",
+	"main": "index.js",
+	"scripts": {
+		"test": "nodeunit ./test"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git://github.com/bminer/stride.git"
+	},
+	"dependencies": {
+	},
+	"devDependencies": {
+		"nodeunit": ">=0.8"
+	},
+	"keywords": [
+		"flow",
+		"control",
+		"step",
+		"error"
+	],
+	"engine": {
+		"node": ">=0.6"
+	},
+	"author": "Blake Miner <miner.blake@gmail.com> (http://www.blakeminer.com/)",
+	"license": "MIT",
+	"readmeFilename": "README.md"
+}
