@@ -1,13 +1,13 @@
 var EventEmitter = require("events").EventEmitter;
 
-/* Introducing Go: A [step](https://github.com/creationix/step/)-like
+/* Introducing Stride: A [step](https://github.com/creationix/step/)-like
 	flow control library for Node.js that makes parallel execution,
 	serial execution, and error handling super extra painless.
 
-	Just pass so-called "step" functions to `Go`, and it will run them:
+	Just pass so-called "step" functions to `Stride`, and it will run them:
 
 	```
-	Go(
+	Stride(
 		function() {
 			fs.readFile("foo.txt", this);
 		}, function() {
@@ -19,13 +19,13 @@ var EventEmitter = require("events").EventEmitter;
 	Each step will get `this`, which is the callback that you're
 	supposed to call once the step completes.
 
-	`Go(...)` returns a Node EventEmitter that emits the following:
+	`Stride(...)` returns a Node EventEmitter that emits the following:
 
 	"error" - Emitted each time an Error occurs
 	"done" - Emitted each time the final `this` callback is called
 		(usually only fired once)
 */
-function Go() {
+function Stride() {
 	var steps = [];
 	var emitter = new EventEmitter();
 	var data = {};
@@ -49,7 +49,7 @@ function Go() {
 	/* Return the `next()` function specific to a step. */
 	function getNext(index) {
 		var numCalls = 0,
-			maxCalls = Go.defaultMaxCalls,
+			maxCalls = Stride.defaultMaxCalls,
 			errorRaised = false;
 		/* This function is passed as `this` to each step.
 			It's purpose is to invoke the next step, passing parameters,
@@ -57,7 +57,7 @@ function Go() {
 		*/
 		function next(err) {
 			if(maxCalls != null && ++numCalls > maxCalls) {
-				err = new Error("go: `this` was called more than " +
+				err = new Error("stride: `this` was called more than " +
 					maxCalls + " times!");
 			}
 			//Process arguments
@@ -140,7 +140,7 @@ function Go() {
 						//Make sure that too many parallel steps didn't execute
 						if(parallelDone > parallelTotal)
 						{
-							parallelArgs[0] = new Error("go: Parallel step " +
+							parallelArgs[0] = new Error("stride: Parallel step " +
 								"callback was called more than " +
 								parallelTotal + " times!");
 						}
@@ -197,7 +197,7 @@ function Go() {
 							//Make sure that too many group steps didn't execute
 							if(groupDone > groupTotal && groupError == null)
 							{
-								groupError = new Error("go: Parallel group" +
+								groupError = new Error("stride: Parallel group" +
 									"callback was called more than " +
 									groupTotal + " times!");
 							}
@@ -239,5 +239,5 @@ function Go() {
 	});
 	return emitter;
 }
-Go.defaultMaxCalls = 1;
-module.exports = Go;
+Stride.defaultMaxCalls = 1;
+module.exports = Stride;
