@@ -26,8 +26,8 @@ Unlike Step, errors will not get passed to the next step.  Instead,
 errors are emitted from the Stride EventEmitter.  `Stride(...)` returns
 a Node EventEmitter that emits the following:
 
-"error" - Emitted each time an Error occurs
-"done" - Emitted each time the final `this` callback is called
+- "error" - Emitted each time an Error occurs
+- "done" - Emitted each time the final `this` callback is called
 	(usually only fired once)
 
 Each step will get `this`, which is the callback that you're
@@ -48,5 +48,5 @@ API available to each step:
 - `var group1 = this.group()` can be used to create a `Group` of steps.
 	You can call `group1()` to create a parallel callback for that `Group`.
 - `this.data(key, value)` can be used to store data
-- `this.data(key)` can be used to retrieve the data later
+- `this.data(key)` can be used to retrieve the data later, even from another step
 - `this.data.clean()` can be used to delete all data
