@@ -62,8 +62,11 @@ function Stride() {
 			}
 			//Process arguments
 			if(err) {
-				if(EventEmitter.listenerCount(emitter, "error") > 0)
-					emitter.emit("error", err);
+				if(EventEmitter.listenerCount(emitter, "error") > 0) {
+					process.nextTick(function() {
+						emitter.emit("error", err);
+					})
+				}
 				else if(EventEmitter.listenerCount(emitter, "done") == 0)
 					process.nextTick(function() {
 						throw err; //Throw uncaught exception
@@ -230,7 +233,9 @@ function Stride() {
 			args[0] = "done";
 			for(var i = 0; i < rawArgs.length; i++)
 				args[i + 1] = rawArgs[i];
-			emitter.emit.apply(emitter, args);
+			process.nextTick(function() {
+				emitter.emit.apply(emitter, args);
+			});
 		}
 	}
 	//Run the first step

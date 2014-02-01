@@ -37,8 +37,7 @@ exports.catchesErrors = function(test) {
 			test.equal(x, 1);
 			x = 2;
 			this();
-			test.equal(x, "err");
-			test.done();
+			test.equal(x, 3);
 		},
 		function() {
 			test.equal(x, 2);
@@ -59,57 +58,70 @@ exports.catchesErrors = function(test) {
 	}).on("done", function(err) {
 		test.equal(x, "err");
 		test.equal(err.message, "This is an error.");
+		test.done();
 	});
 }
 
 exports.handlesMultipleCallbackProblem = function(test) {
-	test.expect(16);
+	test.expect(23);
 	var x = 1;
 	stride(
 		function() {
 			test.equal(x, 1);
-			x = 2;
+			x++;
 			this(null, "arg1", "arg2");
-			test.equal(x, 5);
+			test.equal(x, 4);
 			this(null, "arg3", "arg4");
-			test.equal(x, 7);
+			test.equal(x, 4);
 			this(null, "arg5", "arg6");
-			test.equal(x, 7);
-			test.done();
+			test.equal(x, 4);
+			this(null, "arg7", "arg8");
 		},
 		function(arg1, arg2) {
+			// Only gets executed once
 			test.equal(x, 2);
-			x = 3;
+			x++;
 			test.equal(arg1, "arg1");
 			test.equal(arg2, "arg2");
 			test.equal(2, arguments.length);
 			this();
 		},
 		function() {
+			// Only gets executed once
 			test.equal(x, 3);
-			x = 4;
+			x++;
 			this(null, "foo", "bar");
 		}
-	).once("error", function(err) {
+	).on("error", function(err) {
+		// Gets called 3 times
 		test.equal(1, arguments.length);
-		test.equal(x, 5);
 		test.ok(err.message.indexOf("called more than") >= 0);
 		x++;
+		if(x == 9)
+			test.done();
 	}).on("done", function(err, foo, bar) {
+		// Gets called twice
 		if(x == 4) {
 			test.equal(3, arguments.length);
 			test.equal(err, null);
 			test.equal(foo, "foo");
 			test.equal(bar, "bar");
-			x = 5;
+			x++
+		}
+		else if(x == 6) {
+			test.equal(3, arguments.length);
+			test.ok(err.message.indexOf("called more than") >= 0);
+			test.equal(foo, "arg3");
+			test.equal(bar, "arg4");
+			x++;
 		}
 		else
-			x++;
+			test.ok(false);
 	});
 }
 
 exports.handlesMultipleCallbacks = function(test) {
-	test.expect(25);
+	test.expect(26);
 	var x = 1;
 	stride(
 		function() {
@@ -117,21 +129,21 @@ exports.handlesMultipleCallbacks = function(test) {
 			test.equal(x, 1);
 			x++;
 			this(null, "arg1", "arg2");
-			test.equal(x, 5);
+			test.equal(x, 4);
 			this(null, "arg3", "arg4");
-			test.equal(x, 8);
+			test.equal(x, 6);
 			this(null, "arg5", "arg6");
-			test.equal(x, 11);
-			test.done();
+			test.equal(x, 8);
 		},
 		function(arg1, arg2) {
 			if(x == 2) {
 				test.equal(arg1, "arg1");
 				test.equal(arg2, "arg2");
-			} else if(x == 5) {
+			} else if(x == 4) {
 				test.equal(arg1, "arg3");
 				test.equal(arg2, "arg4");
 			} else {
+				test.equal(x, 6);
 				test.equal(arg1, "arg5");
 				test.equal(arg2, "arg6");
 			}
@@ -152,6 +164,8 @@ exports.handlesMultipleCallbacks = function(test) {
 		test.equal(foo, "foo");
 		test.equal(bar, "bar");
 		x++;
+		if(x == 11)
+			test.done();
 	});
 }
 
@@ -207,8 +221,7 @@ exports.supportsParallelCallbacks = function(test) {
 			test.equal(arg4, "idiot");
 			test.equal(4, arguments.length);
 			this(null, arg1);
-			test.equals(x, "done");
-			test.done();
+			test.equals(x, 4);
 		}
 	).on("error", function(err) {
 		x = "err";
@@ -219,6 +232,7 @@ exports.supportsParallelCallbacks = function(test) {
 		test.equals(2, arguments.length);
 		test.equals(err, null);
 		test.equals(arg1, "foo");
+		test.done();
 	});
 };
 
@@ -297,6 +311,21 @@ exports.canThrowUncaughtException = function(test) {
 			this(new Error("Oops!") );
 		}
 	);
+};
+
+exports.throwsErrorsInDoneHandler = function(test) {
+	test.expect(1);
+	process.once("uncaughtException", function(err) {
+		test.equal(err.message, "Oops!");
+		test.done();
+	});
+	stride(
+		function() {
+			this();
+		}
+	).once("done", function() {
+		throw new Error("Oops!");
+	});
 };
 
 exports.supportsGroups = function(test) {
