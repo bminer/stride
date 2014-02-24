@@ -423,3 +423,21 @@ exports.worksSynchronously = function(test) {
 		test.done();
 	});
 }
+
+exports.unusedGroupsDontCauseHangs = function(test) {
+	test.expect(6);
+	var x = 1;
+	stride(function() {
+		var g1 = this.group();
+		var g2 = this.group();
+		test.equals(x, 1);
+		x++;
+	}).on("done", function(err, g1, g2) {
+		test.equals(x, 2);
+		test.equals(arguments.length, 3);
+		test.equals(err, null);
+		test.equals(g1.length, 0);
+		test.equals(g2.length, 0);
+		test.done();
+	});
+}

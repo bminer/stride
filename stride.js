@@ -180,6 +180,13 @@ function Stride() {
 				groupDone = 0,
 				groupArgs = [],
 				groupError = null;
+			/* If there are no group callbacks created before the next
+				tick, we just call the `groupCallback` */
+			process.nextTick(function() {
+				if(groupTotal === 0) {
+					groupCallback.call(null, groupError, groupArgs);
+				}
+			});
 			//Return a callback-generating function
 			return function parallelGroup() {
 				//Create closure for argument index
