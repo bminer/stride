@@ -219,7 +219,7 @@ function Stride() {
 			};
 		}
 		/* Some data storage exposed to multiple steps */
-		next.data = function data(key, value) {
+		next.data = function dataFunction(key, value) {
 			if(arguments.length == 0) {
 				return data;
 			} else if(arguments.length == 1) {

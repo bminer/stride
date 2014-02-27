@@ -440,4 +440,33 @@ exports.unusedGroupsDontCauseHangs = function(test) {
 		test.equals(g2.length, 0);
 		test.done();
 	});
-}
+};
+
+exports.canStoreData = function(test) {
+	test.expect(9);
+	stride(
+		function() {
+			test.equal(this.data("foo"), undefined);
+			this.data("foo", 1);
+			test.equal(this.data("foo"), 1);
+			return null;
+		},
+		function() {
+			test.equal(this.data("foo"), 1);
+			this.data("bar", "testing");
+			this();
+		},
+		function() {
+			test.equal(this.data("foo"), 1);
+			test.equal(this.data("bar"), "testing");
+			var data = this.data();
+			test.equal(Object.keys(data).length, 2);
+			test.equal(data.foo, 1);
+			test.equal(data.bar, "testing");
+			this();
+		}
+	).on("done", function(err) {
+		test.equal(err, null);
+		test.done();
+	});
+};
