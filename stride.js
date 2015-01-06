@@ -69,8 +69,10 @@ function Stride() {
 				}
 				else if(EventEmitter.listenerCount(emitter, "done") == 0)
 					process.nextTick(function() {
+						// Warn the user that they aren't properly handling Stride errors
+						err.message = "Uncaught exception within Stride: " + err.message;
 						throw err; //Throw uncaught exception
-					})
+					});
 				if(!errorRaised)
 					emitDone(arguments);
 				errorRaised = true;
