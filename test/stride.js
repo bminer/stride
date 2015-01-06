@@ -303,7 +303,7 @@ exports.handlesErrorWithoutDoneListener = function(test) {
 exports.canThrowUncaughtException = function(test) {
 	test.expect(1);
 	process.once("uncaughtException", function(err) {
-		test.equal(err.message, "Oops!");
+		test.equal(err.message, "Uncaught exception within Stride: Oops!");
 		test.done();
 	});
 	stride(
