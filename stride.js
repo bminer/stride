@@ -65,9 +65,9 @@ function Stride() {
 				if(EventEmitter.listenerCount(emitter, "error") > 0) {
 					process.nextTick(function() {
 						emitter.emit("error", err);
-					})
+					});
 				}
-				else if(EventEmitter.listenerCount(emitter, "done") == 0)
+				else if(EventEmitter.listenerCount(emitter, "done") === 0)
 					process.nextTick(function() {
 						// Warn the user that they aren't properly handling Stride errors
 						err.message = "Uncaught exception within Stride: " + err.message;
@@ -152,7 +152,7 @@ function Stride() {
 						//Call the next step
 						next.apply(null, parallelArgs);
 					}
-				}
+				};
 			})(parallelTotal++);
 		};
 		/* Create a new group of steps. Each group of steps will be
@@ -219,12 +219,12 @@ function Stride() {
 					};
 				})(groupTotal++);
 			};
-		}
+		};
 		/* Some data storage exposed to multiple steps */
 		next.data = function dataFunction(key, value) {
-			if(arguments.length == 0) {
+			if(arguments.length === 0) {
 				return data;
-			} else if(arguments.length == 1) {
+			} else if(arguments.length === 1) {
 				return data[key];
 			} else {
 				data[key] = value;

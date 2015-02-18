@@ -27,7 +27,7 @@ exports.callsCallbacks = function(test) {
 			test.equal(x, 4);
 		}
 	);
-}
+};
 
 exports.catchesErrors = function(test) {
 	test.expect(7);
@@ -60,7 +60,7 @@ exports.catchesErrors = function(test) {
 		test.equal(err.message, "This is an error.");
 		test.done();
 	});
-}
+};
 
 exports.handlesMultipleCallbackProblem = function(test) {
 	test.expect(23);
@@ -106,7 +106,7 @@ exports.handlesMultipleCallbackProblem = function(test) {
 			test.equal(err, null);
 			test.equal(foo, "foo");
 			test.equal(bar, "bar");
-			x++
+			x++;
 		}
 		else if(x == 6) {
 			test.equal(3, arguments.length);
@@ -118,7 +118,7 @@ exports.handlesMultipleCallbackProblem = function(test) {
 		else
 			test.ok(false);
 	});
-}
+};
 
 exports.handlesMultipleCallbacks = function(test) {
 	test.expect(26);
@@ -167,7 +167,7 @@ exports.handlesMultipleCallbacks = function(test) {
 		if(x == 11)
 			test.done();
 	});
-}
+};
 
 exports.notCompatibleWithStepSilliness = function(test) {
 	test.expect(6);
@@ -193,7 +193,7 @@ exports.notCompatibleWithStepSilliness = function(test) {
 		if(x == 5)
 			test.done();
 	});
-}
+};
 
 exports.supportsParallelCallbacks = function(test) {
 	test.expect(13);
@@ -282,7 +282,7 @@ exports.handlesErrorWithoutErrorListener = function(test) {
 		}
 	).on("done", function(err) {
 		test.equals(arguments.length, 1);
-		test.equals(err.message, "Oops!")
+		test.equals(err.message, "Oops!");
 		test.done();
 	});
 };
@@ -295,7 +295,7 @@ exports.handlesErrorWithoutDoneListener = function(test) {
 		}
 	).on("error", function(err) {
 		test.equals(arguments.length, 1);
-		test.equals(err.message, "Oops!")
+		test.equals(err.message, "Oops!");
 		test.done();
 	});
 };
@@ -348,7 +348,7 @@ exports.supportsGroups = function(test) {
 		test.equals(0, arguments.length);
 		test.done();
 	});
-}
+};
 
 exports.supportsGroupsWithMultipleArguments = function(test) {
 	test.expect(8);
@@ -374,7 +374,7 @@ exports.supportsGroupsWithMultipleArguments = function(test) {
 		test.equals(0, arguments.length);
 		test.done();
 	});
-}
+};
 
 exports.worksSynchronously = function(test) {
 	test.expect(16);
@@ -384,7 +384,7 @@ exports.worksSynchronously = function(test) {
 			test.equal(x, 1);
 			x = 2;
 			return "foo";
-			test.ok(false);
+			//test.ok(false);
 		},
 		function(data) {
 			test.equal(x, 2);
@@ -422,7 +422,7 @@ exports.worksSynchronously = function(test) {
 		test.equals(data, null);
 		test.done();
 	});
-}
+};
 
 exports.unusedGroupsDontCauseHangs = function(test) {
 	test.expect(6);
