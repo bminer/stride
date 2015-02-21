@@ -1,6 +1,6 @@
 var stride = require("../");
 
-//nodeunit tests}
+//nodeunit tests
 exports.callsCallbacks = function(test) {
 	test.expect(7);
 	var x = 1;
@@ -467,6 +467,17 @@ exports.canStoreData = function(test) {
 		}
 	).on("done", function(err) {
 		test.equal(err, null);
+		test.done();
+	});
+};
+
+exports.worksWithNoArgs = function(test) {
+	test.expect(3);
+	var x = 1;
+	stride().on("done", function(err) {
+		test.equals(x, 1);
+		test.equals(arguments.length, 0);
+		test.equals(err, null);
 		test.done();
 	});
 };
