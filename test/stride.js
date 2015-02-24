@@ -376,6 +376,33 @@ exports.supportsGroupsWithMultipleArguments = function(test) {
 	});
 };
 
+exports.supportsGroupsWithErrors = function(test) {
+	test.expect(5);
+	var x = 1;
+	stride(
+		function() {
+			var group = this.group();
+			setTimeout(group().bind(null, new Error("This group throws an Error"),
+				"foo", "foo2"), 200);
+			setTimeout(group().bind(null, null, "bar", "bar2"), 100);
+			x = 2;
+		},
+		function(data) {
+			// Should not get executed
+			x = 3;
+			test.ok(false);
+			this();
+		}
+	).on("done", function(err, data) {
+		test.equals(x, 2);
+		test.equals(arguments.length, 2);
+		test.equals(data.length, 2);
+		test.equals(data[0], "foo");
+		test.equals(data[1], "bar");
+		test.done();
+	});
+}
+
 exports.worksSynchronously = function(test) {
 	test.expect(16);
 	var x = 1;
