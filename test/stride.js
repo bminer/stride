@@ -63,7 +63,7 @@ exports.catchesErrors = function(test) {
 };
 
 exports.handlesMultipleCallbackProblem = function(test) {
-	test.expect(23);
+	test.expect(21);
 	var x = 1;
 	stride(
 		function() {
@@ -109,10 +109,8 @@ exports.handlesMultipleCallbackProblem = function(test) {
 			x++;
 		}
 		else if(x == 6) {
-			test.equal(3, arguments.length);
+			test.equal(1, arguments.length);
 			test.ok(err.message.indexOf("called more than") >= 0);
-			test.equal(foo, "arg3");
-			test.equal(bar, "arg4");
 			x++;
 		}
 		else
@@ -237,7 +235,7 @@ exports.supportsParallelCallbacks = function(test) {
 };
 
 exports.supportsParallelCallbacksWithError = function(test) {
-	test.expect(11);
+	test.expect(8);
 	var x = 1;
 	stride(
 		function() {
@@ -265,11 +263,36 @@ exports.supportsParallelCallbacksWithError = function(test) {
 	}).on("done", function(err, arg1, arg2, arg3, arg4) {
 		test.equals(x, "err");
 		x = "done";
-		test.equals(arguments.length, 5);
-		test.equal(arg1, "foo");
-		test.equal(arg2, undefined);
-		test.equal(arg3, "foo");
-		test.equal(arg4, "idiot");
+		test.equals(arguments.length, 1);
+		test.equals(err.message, "Oops!");
+		test.done();
+	});
+};
+
+exports.supportsParallelCallbacksWithMultipleArgs = function(test) {
+	test.expect(14);
+	stride(function() {
+		setTimeout(this.parallel().bind(null, null, 1, 2, 3), 100);
+		setTimeout(this.parallel(2).bind(null, null, 4, 5, 6), 200);
+		setTimeout(this.parallel(3).bind(null, null, 7, 8, 9), 150);
+	}, function(a, b, c, d, e, f) {
+		test.equals(arguments.length, 6);
+		test.equals(a, 1);
+		test.equals(b, 4);
+		test.equals(c, 5);
+		test.equals(d, 7);
+		test.equals(e, 8);
+		test.equals(f, 9);
+		setTimeout(this.parallel(3).bind(null, null, 10, 11, 12), 100);
+		setTimeout(this.parallel(2).bind(null, null, 13, 14, 15), 200);
+	}).on("done", function(err, a, b, c, d, e) {
+		test.equals(arguments.length, 6);
+		test.equals(err, null);
+		test.equals(a, 10);
+		test.equals(b, 11);
+		test.equals(c, 12);
+		test.equals(d, 13);
+		test.equals(e, 14);
 		test.done();
 	});
 };
@@ -351,23 +374,40 @@ exports.supportsGroups = function(test) {
 };
 
 exports.supportsGroupsWithMultipleArguments = function(test) {
-	test.expect(8);
+	test.expect(20);
 	var x = 1;
 	stride(
 		function() {
 			var group = this.group(2);
-			setTimeout(group().bind(null, null, "foo", "foo2"), 300);
+			setTimeout(group().bind(null, null, "foo", "foo2", "foo3"), 300);
 			setTimeout(group().bind(null, null, "bar", "bar2"), 100);
 			setTimeout(this.parallel().bind(null, null, "parallel", "parallel2"), 200);
+
+			var group2 = this.group(4);
+			setTimeout(group2().bind(null, null, "foo", "foo2", "foo3", "foo4", "foo5"), 300);
+			setTimeout(group2().bind(null, null, "bar", "bar2", "bar3", "bar4", "bar5"), 100);
+			setTimeout(this.parallel(3).bind(null, null, "world1", "world2", "world3", "world4"), 200);
 		},
-		function(data, parallel) {
-			test.equals(arguments.length, 2);
+		function(data, parallel, data2, parallel2a, parallel2b, parallel2c) {
+			test.equals(arguments.length, 6);
 			test.equals(data.length, 4);
 			test.equals(data[0], "foo");
 			test.equals(data[1], "foo2");
 			test.equals(data[2], "bar");
 			test.equals(data[3], "bar2");
 			test.equals(parallel, "parallel");
+			test.equals(data2.length, 8);
+			test.equals(data2[0], "foo");
+			test.equals(data2[1], "foo2");
+			test.equals(data2[2], "foo3");
+			test.equals(data2[3], "foo4");
+			test.equals(data2[4], "bar");
+			test.equals(data2[5], "bar2");
+			test.equals(data2[6], "bar3");
+			test.equals(data2[7], "bar4");
+			test.equals(parallel2a, "world1");
+			test.equals(parallel2b, "world2");
+			test.equals(parallel2c, "world3");
 			this();
 		}
 	).on("done", function(err) {
@@ -377,7 +417,7 @@ exports.supportsGroupsWithMultipleArguments = function(test) {
 };
 
 exports.supportsGroupsWithErrors = function(test) {
-	test.expect(5);
+	test.expect(3);
 	var x = 1;
 	stride(
 		function() {
@@ -395,10 +435,8 @@ exports.supportsGroupsWithErrors = function(test) {
 		}
 	).on("done", function(err, data) {
 		test.equals(x, 2);
-		test.equals(arguments.length, 2);
-		test.equals(data.length, 2);
-		test.equals(data[0], "foo");
-		test.equals(data[1], "bar");
+		test.equals(arguments.length, 1);
+		test.equals(err.message, "This group throws an Error");
 		test.done();
 	});
 }
@@ -421,8 +459,8 @@ exports.worksSynchronously = function(test) {
 				p2 = this.parallel();
 			p1(null, "synchronous parallel");
 			p2(null, "synchronous parallel 2");
-			test.equal(x, 3);
-			x = 4;
+			test.equal(x, 2);
+			x = 3;
 			setTimeout(function() {
 				test.equal(x, 4);
 				x = 5;
@@ -430,10 +468,10 @@ exports.worksSynchronously = function(test) {
 		},
 		function(p1, p2) {
 			test.equal(arguments.length, 2);
-			test.equal(x, 2);
+			test.equal(x, 3);
 			test.equal(p1, "synchronous parallel");
 			test.equal(p2, "synchronous parallel 2");
-			x = 3;
+			x = 4;
 			setTimeout(this, 200);
 		},
 		function() {
@@ -507,4 +545,43 @@ exports.worksWithNoArgs = function(test) {
 		test.equals(err, null);
 		test.done();
 	});
+};
+
+exports.executesEntireStepBeforeCallingNext = function(test) {
+	function callsCallbackSynchronously(cb) {
+		if(true) {
+			return cb(null, "Hello");
+		} else {
+			// this branch does not execute
+			test.ok(false);
+			setTimeout(cb, 100);
+		}
+	}
+	stride(function() {
+		callsCallbackSynchronously(this.parallel() );
+		/* Next step not called even though `this.parallel()` callback was
+			called synchronously */
+		setTimeout(this.parallel().bind(null, null, "World"), 100);
+	}).once("done", function(err, data, data2) {
+		test.equals(err, null);
+		test.equals(data, "Hello");
+		test.equals(data2, "World");
+		test.equals(arguments.length, 3);
+		test.done();
+	});
+};
+
+exports.handlesSynchronousErrorAndParallelCallback = function(test) {
+	test.expect(2);
+	stride(function() {
+		setTimeout(this.parallel().bind(null, null, "World"), 100);
+		throw new Error("Oh no!!");
+	}, function() {
+		// Should never be reached
+		test.ok(false);
+	}).on("done", function(err) {
+		test.equals(arguments.length, 1);
+		test.equals(err.message, "Oh no!!");
+		test.done();
+	})
 };

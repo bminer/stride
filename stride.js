@@ -57,8 +57,14 @@ function Stride() {
 		*/
 		function next(err) {
 			if(maxCalls != null && ++numCalls > maxCalls) {
-				err = new Error("stride: `this` was called more than " +
+				var newErr = new Error("stride: `this` was called more than " +
 					maxCalls + " times!");
+				if(err) {
+					newErr.message += " Error passed to `this` on call #" + numCalls +
+						": " + err.message;
+					newErr.errorOnStep = err;
+				}
+				err = newErr;
 			}
 			//Process arguments
 			if(err) {
@@ -74,7 +80,7 @@ function Stride() {
 						throw err; //Throw uncaught exception
 					});
 				if(!errorRaised)
-					emitDone(arguments);
+					emitDone([err]);
 				errorRaised = true;
 			}
 			if(!errorRaised) {
@@ -101,6 +107,8 @@ function Stride() {
 					} catch(e) {
 						thisStepsNext(e);
 					}
+					// Mark `thisStepsNext` as "synchronously complete"
+					thisStepsNext._syncDone();
 				}
 				else {
 					emitDone(arguments);
@@ -113,7 +121,18 @@ function Stride() {
 		};
 		var parallelTotal = 0,
 			parallelDone = 0,
+			parallelIndex = 0,
+			syncDone = false,
 			parallelArgs = [null];
+		/* Marks this step as "synchronously complete", allowing parallel
+			callbacks to trigger the next step. */
+		next._syncDone = function() {
+			syncDone = true;
+			if(parallelTotal > 0 && parallelDone >= parallelTotal) {
+				//Call the next step
+				next.apply(null, parallelArgs);
+			}
+		};
 		/* Break this step into multiple parallel steps.
 			The first argument passed to each parallel step's callback must
 			be the Error.
@@ -130,15 +149,16 @@ function Stride() {
 			numDataArgs = numDataArgs || 1;
 			//Create closure for argument index
 			return (function(index) {
+				parallelTotal++;
+				parallelIndex += numDataArgs;
 				return function parallel(err, data) {
 					//Save the error from the first failed parallel step
 					if(err && parallelArgs[0] == null) {
 						parallelArgs[0] = err;
 					}
 					//Save the next `numDataArgs` arguments
-					for(var i = 0; i < numDataArgs; i++) {
-						parallelArgs[index * numDataArgs + i + 1] =
-							arguments[i + 1];
+					for(var i = 1; i <= numDataArgs; i++) {
+						parallelArgs[index + i] = arguments[i];
 					}
 					//When all parallel steps are done...
 					if(++parallelDone >= parallelTotal) {
@@ -149,11 +169,14 @@ function Stride() {
 								"callback was called more than " +
 								parallelTotal + " times!");
 						}
-						//Call the next step
-						next.apply(null, parallelArgs);
+						/* Call the next step if the current one has completed
+							synchronously */
+						if(syncDone) {
+							next.apply(null, parallelArgs);
+						}
 					}
 				};
-			})(parallelTotal++);
+			})(parallelIndex);
 		};
 		/* Create a new group of steps. Each group of steps will be
 			executed in parallel, just like a `next.parallel()` call.

@@ -62,6 +62,12 @@ Stride to emit an Error.
 parallel callbacks complete, Stride will pass their second argument (the
 first argument is the Error) to the next step.  If there are multiple parallel
 callbacks, the next step will receive multiple arguments.
+
+**Note:** As of stride version 2, the current step must complete along with all
+parallel callbacks before the next step is called.  In version 1, the current
+step did not need to complete, which sometimes caused strange behavior when
+parallel callbacks were called synchronously (usually with an Error).
+
 - `var group1 = this.group()` can be used to create a `Group` of steps.
   You can call `group1()` to create a parallel callback for that `Group`.
   Once all parallel callbacks for all Groups are complete, Stride will pass
@@ -118,7 +124,6 @@ Stride(
 		});
 		// There should be at least a 1 second delay before calling the next step
 		setTimeout(this.parallel().bind(null, null, "Timer string"), 1000);
-		
 	}
 ).once("done", function(err, contents, str) {
 	// If an error occurs during any step, we just handle the error here and abort.
