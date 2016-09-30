@@ -58,25 +58,41 @@ API available to each step:
  times `this()` can be called in a given step. By default, a step can
 only call `this()` once.  Calling `this()` too many times will cause
 Stride to emit an Error.
-- `this.parallel()` can be used to create a parallel callback.  Once all
-parallel callbacks complete, Stride will pass their second argument (the
-first argument is the Error) to the next step.  If there are multiple parallel
-callbacks, the next step will receive multiple arguments.
+- `this.parallel([numDataArgs])` can be used to create a parallel callback.
+Once all parallel callbacks in a step complete, Stride will pass their data
+arguments (the first argument is the Error) to the next step.  If `numDataArgs`
+is not specified, Stride assumes 1 data argument. If there are multiple
+parallel callbacks, the next step will receive multiple arguments (in the order
+`this.parallel()` was called).
 
 **Note:** As of stride version 2, the current step must complete along with all
 parallel callbacks before the next step is called.  In version 1, the current
 step did not need to complete, which sometimes caused strange behavior when
 parallel callbacks were called synchronously (usually with an Error).
 
-- `var group1 = this.group()` can be used to create a `Group` of steps.
-  You can call `group1()` to create a parallel callback for that `Group`.
-  Once all parallel callbacks for all Groups are complete, Stride will pass
-  each of the parallel callbacks' second arguments as an Array to the next
+- `var group1 = this.group([numDataArgs])` can be used to create a `Group` of
+  steps.  You can call `group1()` to create a parallel callback for that
+  `Group`.  Once all parallel callbacks for all Groups are complete, Stride will
+  pass each of the parallel callbacks' data arguments as an Array to the next
   step.  If there are multiple Groups, the next step will receive multiple
-  arguments.
+  arguments.  Note: Each `this.group()` call creates exactly 1 argument passed
+  to the next step.  If `numDataArgs` is greater than 1, the Group's array
+  argument passed to the next step will contain a multiple of `numDataArgs`
+  elements, a set for each `group1()` call, for example.  Expanding further, if
+  `numDataArgs` was 3 and `group1()` was called 4 times, the next step would
+  receive one data argument for the entire group, which would be an Array of 12
+  elements, 3 for each `group1()` call.
 - `this.data(key, value)` can be used to store data
 - `this.data(key)` can be used to retrieve the data later, even from another step
 - `this.data.clean()` can be used to delete all data
+- `this.errorArgumentOnly(errorOnly)` can be used to set the `errorArgOnly`
+  flag.  By default, `errorArgOnly` is `true`, so only the `err` argument is
+  passed to the "done" event handler when a step triggers an Error.  If
+  `this.errorArgumentOnly(false)` is called, all arguments from that step will
+  be passed to the "done" event handler.  You can also call
+  `this.errorArgumentOnly()` to return the current value of the `errorArgOnly`
+  setting.  Note: This setting affect only the current step, not the entire
+  series of steps.
 
 Examples
 --------

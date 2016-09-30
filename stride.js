@@ -50,6 +50,7 @@ function Stride() {
 	function getNext(index) {
 		var numCalls = 0,
 			maxCalls = Stride.defaultMaxCalls,
+			errorArgOnly = true,
 			errorRaised = false;
 		/* This function is passed as `this` to each step.
 			It's purpose is to invoke the next step, passing parameters,
@@ -79,9 +80,10 @@ function Stride() {
 						err.message = "Uncaught exception within Stride: " + err.message;
 						throw err; //Throw uncaught exception
 					});
-				if(!errorRaised)
-					emitDone([err]);
-				errorRaised = true;
+				if(!errorRaised) {
+					emitDone(errorArgOnly ? [err] : arguments);
+					errorRaised = true;
+				}
 			}
 			if(!errorRaised) {
 				//Call the next step
@@ -118,6 +120,12 @@ function Stride() {
 		next.canBeCalled = function canBeCalled(numOfTimes) {
 			maxCalls = numOfTimes;
 			return next;
+		};
+		next.errorArgumentOnly = function errorArgumentOnly(errorOnly) {
+			if(arguments.length)
+				errorArgOnly = errorOnly === true;
+			else
+				return errorArgOnly;
 		};
 		var parallelTotal = 0,
 			parallelDone = 0,

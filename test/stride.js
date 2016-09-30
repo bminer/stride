@@ -269,6 +269,72 @@ exports.supportsParallelCallbacksWithError = function(test) {
 	});
 };
 
+exports.supportsErrorArgumentOnlyFalse = function(test) {
+	test.expect(15);
+	var x = 1;
+	stride(
+		function() {
+			test.equals(this.errorArgumentOnly(), true);
+			this.errorArgumentOnly(false);
+			test.equals(this.errorArgumentOnly(), false);
+			test.equals(x, 1);
+			setTimeout(this.parallel().bind(null, null, "foo"), 100);
+			setTimeout(this.parallel().bind(null, new Error("Oops!") ), 300);
+			setTimeout(this.parallel().bind(null, new Error("Oopsie!") ), 350);
+			setTimeout(this.parallel().bind(null, null, "foo", "bar"), 200);
+			x = 2;
+			var cb = this.parallel();
+			setTimeout(function() {
+				test.equal(x, 2);
+				x = 3;
+				cb(null, "idiot");
+			}, 400);
+		},
+		function(arg1, arg2, arg3, arg4) {
+			test.ok(false); //should not get here
+			this();
+		}
+	).on("error", function(err) {
+		test.equals(x, 3);
+		test.equals(arguments.length, 1);
+		x = "err";
+		test.equals(err.message, "Oops!");
+	}).on("done", function(err, arg1, arg2, arg3, arg4, arg5) {
+		test.equals(x, "err");
+		x = "done";
+		test.equals(arguments.length, 6);
+		test.equals(err.message, "Oops!");
+		test.equals(arg1, "foo");
+		test.equals(arg2, undefined);
+		test.equals(arg3, undefined);
+		test.equals(arg4, "foo");
+		test.equals(arg5, "idiot");
+		test.done();
+	});
+};
+
+exports.errorArgumentOnlyAffectsCurrentStepOnly = function(test) {
+	test.expect(7);
+	stride(function() {
+		test.equals(this.errorArgumentOnly(), true);
+		this.errorArgumentOnly(false);
+		test.equals(this.errorArgumentOnly(), false);
+		var cb = this.parallel();
+		setTimeout(cb.bind(null, null, "hello"), 200);
+	}, function(hello) {
+		test.equals(this.errorArgumentOnly(), true);
+		test.equals(arguments.length, 1);
+		test.equals(hello, "hello");
+		setTimeout(this.parallel().bind(null, null, "foo"), 100);
+		setTimeout(this.parallel().bind(null, new Error("Oops!") ), 300);
+		setTimeout(this.parallel().bind(null, null, "foo", "bar"), 200);
+	}).on("done", function(err) {
+		test.equals(arguments.length, 1);
+		test.equals(err.message, "Oops!");
+		test.done();
+	});
+};
+
 exports.supportsParallelCallbacksWithMultipleArgs = function(test) {
 	test.expect(14);
 	stride(function() {
